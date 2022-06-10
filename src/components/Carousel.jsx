@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import IcLeft from "../assets/icon_left.svg?component";
 import IcRight from "../assets/icon_right.svg?component";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Carousel() {
   const images = [
@@ -27,46 +27,71 @@ export default function Carousel() {
     },
   ];
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [direction, setDirection] = useState();
+  const slideRef = useRef(null);
+
+  useEffect(() => {
+    console.log(currentIdx);
+    if (currentIdx === -1) {
+      console.log("-1입니다.");
+
+      slideRef.current.style.transition = "all 0.5s ease-in-out";
+      slideRef.current.style.transform = `translateX(-2000px)`;
+      setCurrentIdx(images.length - 1);
+    } else if (currentIdx === images.length) {
+      setCurrentIdx(0);
+
+      slideRef.current.style.transition = "all 0.5s ease-in-out";
+      slideRef.current.style.transform = `translateX(0px)`;
+    }
+  }, [currentIdx]);
 
   const onClickLeftButton = () => {
-    setDirection("left");
-
-    if (currentIdx == 0) {
+    if (currentIdx === -1) {
       setCurrentIdx(images.length - 1);
     } else {
+      console.log((currentIdx + 1) * 500 - 500);
       setCurrentIdx((prev) => prev - 1);
+      slideRef.current.style.transition = "all 0.5s ease-in-out";
+      slideRef.current.style.transform = `translateX(-${
+        currentIdx * 500 - 500
+      }px)`;
     }
   };
 
   const onClickRightButton = () => {
-    setDirection("right");
-
-    if (currentIdx == images.length - 1) {
+    if (currentIdx === images.length) {
       setCurrentIdx(0);
     } else {
       setCurrentIdx((prev) => prev + 1);
+      slideRef.current.style.transition = "all 0.5s ease-in-out";
+      slideRef.current.style.transform = `translateX(-${
+        500 * (currentIdx + 1)
+      }px)`;
     }
   };
+
   return (
     <StWrapper>
-      <StImageWrapper key={images[currentIdx].id} direction={direction}>
-        <StLeftButton onClick={onClickLeftButton} />
-        <StRightButton onClick={onClickRightButton} />
-        <img src={images[currentIdx].url} alt={images[currentIdx].id} />
+      <StLeftButton onClick={onClickLeftButton} />
+      <StRightButton onClick={onClickRightButton} />
+      <StImageWrapper ref={slideRef}>
+        {images.map(({ url, id }) => (
+          <img src={url} alt={id} key={id} />
+        ))}
       </StImageWrapper>
     </StWrapper>
   );
 }
 const StWrapper = styled.div`
   display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
-  height: 100vh;
+  position: relative;
+  width: 500px;
+  height: 400px;
+  overflow: hidden;
 `;
 const StImageWrapper = styled.div`
-  position: relative;
+  display: flex;
+
   & > img {
     width: 500px;
     height: 400px;
@@ -78,6 +103,8 @@ const StLeftButton = styled(IcLeft)`
   position: absolute;
   top: calc(100% / 2);
   left: 10px;
+  z-index: 999;
+
   &:hover {
     cursor: pointer;
     & > path {
@@ -89,6 +116,8 @@ const StRightButton = styled(IcRight)`
   position: absolute;
   top: calc(100% / 2);
   right: 10px;
+  z-index: 999;
+
   &:hover {
     cursor: pointer;
     & > path {
